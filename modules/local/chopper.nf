@@ -13,10 +13,13 @@ process CHOPPER {
     def max_length = params.max_length ?: 5000
     
     """
-    chopper -q ${quality} \\
+    # Run chopper - reads from stdin, writes to stdout
+    cat ${fastq_file} | chopper -q ${quality} \\
         -l 0 \\
-        -u ${max_length} \\
-        -i ${fastq_file} > ${sample_name}_filtered.fastq
+        --maxlength ${max_length} > ${sample_name}_filtered.fastq
+    
+    # Check output
+    echo "Filtered ${sample_name}: \$(wc -l < ${sample_name}_filtered.fastq) lines"
     """
     
     stub:

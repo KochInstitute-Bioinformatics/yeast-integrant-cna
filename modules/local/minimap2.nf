@@ -1,6 +1,5 @@
 process MINIMAP2_ALIGN {
     tag "${sample_name}"
-    publishDir "${params.outdir}/alignments", mode: 'copy', pattern: "*.bam*"
     
     input:
     tuple val(sample_name), path(fastq_file), val(transgene), path(reference)
@@ -14,7 +13,7 @@ process MINIMAP2_ALIGN {
     minimap2 -ax map-ont -t ${task.cpus} \\
         ${reference} \\
         ${fastq_file} | \\
-        samtools view -b -o ${sample_name}.bam -
+        samtools view -b -@ ${task.cpus} -o ${sample_name}.bam
     """
     
     stub:

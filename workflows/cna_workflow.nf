@@ -10,6 +10,7 @@ include { NANOPLOT } from '../modules/local/nanoplot'
 include { COMBINE_REFERENCE } from '../modules/local/combine_reference'
 include { MINIMAP2_ALIGN } from '../modules/local/minimap2'
 include { SAMTOOLS_SORT; SAMTOOLS_INDEX } from '../modules/local/samtools'
+include { SAMTOOLS_COVERAGE } from '../modules/local/coverage'
 
 workflow CNA_WORKFLOW {
     take:
@@ -58,7 +59,11 @@ workflow CNA_WORKFLOW {
     // 6. Index sorted BAM files
     SAMTOOLS_INDEX(SAMTOOLS_SORT.out.sorted_bam)
     
+    // 7. Calculate coverage statistics per chromosome/transgene
+    SAMTOOLS_COVERAGE(SAMTOOLS_INDEX.out.indexed_bam)
+    
     emit:
     sorted_indexed_bams = SAMTOOLS_INDEX.out.indexed_bam
+    coverage_results = SAMTOOLS_COVERAGE.out.coverage
     nanoplot_results = NANOPLOT.out.nanoplot_results
 }

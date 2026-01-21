@@ -48,6 +48,7 @@ def helpMessage() {
 
 // Main workflow
 workflow {
+    main:
     // Show help if requested
     if (params.help) {
         helpMessage()
@@ -81,17 +82,4 @@ workflow {
     
     // Run the workflow
     CNA_WORKFLOW(samples_ch)
-    
-    // Workflow completion message
-    workflow.onComplete {
-        log.info """
-        ===================================
-        Pipeline completed!
-        ===================================
-        Status:    ${workflow.success ? 'SUCCESS' : 'FAILED'}
-        Duration:  ${workflow.duration}
-        Output:    ${params.outdir}
-        ===================================
-        """.stripIndent()
-    }
 }

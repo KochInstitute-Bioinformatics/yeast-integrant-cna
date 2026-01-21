@@ -74,7 +74,7 @@ workflow {
         .map { row ->
             tuple(row.name, file(row.fastq), row.transgene)
         }
-        .combine(channel.of(params.length_thresholds))
+        .combine(channel.fromList(params.length_thresholds))
         .map { sample_name, fastq, transgene, length_threshold ->
             tuple("${sample_name}_${length_threshold}", fastq, transgene, length_threshold)
         }

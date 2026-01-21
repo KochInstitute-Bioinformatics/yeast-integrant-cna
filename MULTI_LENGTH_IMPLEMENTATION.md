@@ -63,6 +63,9 @@ The workflow intelligently creates combined references (genome + transgene) only
    - Uses it for `--maxlength` filtering
    - Added threshold info to log output
 
+### Important Technical Note:
+The workflow uses `channel.fromList(params.length_thresholds)` to properly expand the list of thresholds into individual channel elements. This ensures each sample is tested with each threshold value separately.
+
 4. **`modules/local/combine_reference.nf`**
    - Changed to key on transgene instead of sample_name
    - Creates reference once per unique transgene

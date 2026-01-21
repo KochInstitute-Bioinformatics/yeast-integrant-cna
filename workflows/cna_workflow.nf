@@ -14,40 +14,40 @@ include { SAMTOOLS_COVERAGE } from '../modules/local/coverage'
 
 workflow CNA_WORKFLOW {
     take:
-    samples_ch  // channel: [ sample_name, fastq_path, transgene ]
+    samples_ch  // channel: [ sample_name, fastq_path, transgene, length_threshold ]
     
     main:
-    // 1. Filter reads with chopper (maxlength=5000, quality=10)
+    // 1. Filter reads with chopper (using length_threshold parameter)
     CHOPPER(samples_ch)
     
     // 2. Run QC on filtered reads
     NANOPLOT(CHOPPER.out.filtered_reads)
     
-    // 3. Prepare combined reference (genome + transgene)
-    // Create channel with sample info, reference genome path, and transgene file
-    def reference_ch = CHOPPER.out.filtered_reads
-        .map { sample_name, _fastq, transgene ->
+    // 3. Prepare combined reference (genome + transgene) - only once per unique transgene
+    // Extract unique transgenes and create references
+    def unique_transgenes_ch = samples_ch
+        .map { _sample_name, _fastq, transgene, _length_threshold ->
+            transgene
+        }
+        .unique()
+        .map { transgene ->
             def transgene_file = file("${params.transgene_dir}/${transgene}.fa")
             if (!transgene_file.exists()) {
                 error "Transgene file not found: ${transgene_file}\nExpected path: ${params.transgene_dir}/${transgene}.fa\nPlease check that the transgene name in your samples file matches the filename in ${params.transgene_dir}/"
             }
-            tuple(sample_name, file(params.reference_genome), transgene_file)
+            tuple(transgene, file(params.reference_genome), transgene_file)
         }
     
-    COMBINE_REFERENCE(reference_ch)
+    COMBINE_REFERENCE(unique_transgenes_ch)
     
     // 4. Align filtered reads to combined reference with minimap2
-    // Combine filtered reads with their corresponding combined reference
+    // Join filtered reads with their corresponding combined reference using transgene as key
     def alignment_input = CHOPPER.out.filtered_reads
         .map { sample_name, fastq, transgene ->
-            tuple(sample_name, fastq, transgene)
+            tuple(transgene, sample_name, fastq)
         }
-        .join(
-            COMBINE_REFERENCE.out.combined_ref.map { sample_name, ref ->
-                tuple(sample_name, ref)
-            }
-        )
-        .map { sample_name, fastq, transgene, ref ->
+        .combine(COMBINE_REFERENCE.out.combined_ref, by: 0)
+        .map { transgene, sample_name, fastq, ref ->
             tuple(sample_name, fastq, transgene, ref)
         }
     

@@ -1,24 +1,24 @@
 process COMBINE_REFERENCE {
-    tag "${sample_name}"
+    tag "${transgene}"
     publishDir "${params.outdir}/combined_references", mode: 'copy'
     
     input:
-    tuple val(sample_name), path(reference_genome), path(transgene_file)
+    tuple val(transgene), path(reference_genome), path(transgene_file)
     
     output:
-    tuple val(sample_name), path("${sample_name}_combined_reference.fasta"), emit: combined_ref
+    tuple val(transgene), path("${transgene}_combined_reference.fasta"), emit: combined_ref
     
     script:
     """
     # Combine reference genome and transgene into single FASTA
-    cat ${reference_genome} > ${sample_name}_combined_reference.fasta
+    cat ${reference_genome} > ${transgene}_combined_reference.fasta
     
     # Add transgene as an additional "chromosome"
-    cat ${transgene_file} >> ${sample_name}_combined_reference.fasta
+    cat ${transgene_file} >> ${transgene}_combined_reference.fasta
     """
     
     stub:
     """
-    touch ${sample_name}_combined_reference.fasta
+    touch ${transgene}_combined_reference.fasta
     """
 }

@@ -30,7 +30,7 @@ def helpMessage() {
     Optional arguments:
       --outdir                Output directory (default: results)
       --min_quality           Minimum quality score for filtering (default: 10)
-      --max_length            Maximum read length for filtering (default: 5000)
+      --length_thresholds     Array of max read lengths to test (default: [100, 200, 500, 750, 1000, 2000, 5000])
       --help                  Show this help message
     
     Example CSV format (samples.csv):
@@ -67,12 +67,16 @@ workflow {
         error "ERROR: Please specify --transgene_dir parameter"
     }
     
-    // Read samples from CSV
+    // Read samples from CSV and expand with length thresholds
     def samples_ch = channel
         .fromPath(params.samples)
         .splitCsv(header: true)
         .map { row ->
             tuple(row.name, file(row.fastq), row.transgene)
+        }
+        .combine(channel.of(params.length_thresholds))
+        .map { sample_name, fastq, transgene, length_threshold ->
+            tuple("${sample_name}_${length_threshold}", fastq, transgene, length_threshold)
         }
     
     // Run the workflow

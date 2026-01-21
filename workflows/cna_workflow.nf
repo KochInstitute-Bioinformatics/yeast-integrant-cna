@@ -11,6 +11,7 @@ include { COMBINE_REFERENCE } from '../modules/local/combine_reference'
 include { MINIMAP2_ALIGN } from '../modules/local/minimap2'
 include { SAMTOOLS_SORT; SAMTOOLS_INDEX } from '../modules/local/samtools'
 include { SAMTOOLS_COVERAGE } from '../modules/local/coverage'
+include { TRANSGENE_CNA } from '../modules/local/transgene_cna'
 
 workflow CNA_WORKFLOW {
     take:
@@ -62,8 +63,12 @@ workflow CNA_WORKFLOW {
     // 7. Calculate coverage statistics per chromosome/transgene
     SAMTOOLS_COVERAGE(SAMTOOLS_INDEX.out.indexed_bam)
     
+    // 8. Calculate transgene copy number analysis
+    TRANSGENE_CNA(SAMTOOLS_COVERAGE.out.coverage)
+    
     emit:
     sorted_indexed_bams = SAMTOOLS_INDEX.out.indexed_bam
     coverage_results = SAMTOOLS_COVERAGE.out.coverage
+    cna_summary = TRANSGENE_CNA.out.cna_summary
     nanoplot_results = NANOPLOT.out.nanoplot_results
 }

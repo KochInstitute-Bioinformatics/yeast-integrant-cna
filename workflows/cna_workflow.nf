@@ -23,10 +23,14 @@ workflow CNA_WORKFLOW {
     NANOPLOT(CHOPPER.out.filtered_reads)
     
     // 3. Prepare combined reference (genome + transgene)
-    // Create channel with sample info and reference genome path
+    // Create channel with sample info, reference genome path, and transgene file
     def reference_ch = CHOPPER.out.filtered_reads
         .map { sample_name, _fastq, transgene ->
-            tuple(sample_name, transgene, file(params.reference_genome))
+            def transgene_file = file("${params.transgene_dir}/${transgene}.fa")
+            if (!transgene_file.exists()) {
+                error "Transgene file not found: ${transgene_file}\nExpected path: ${params.transgene_dir}/${transgene}.fa\nPlease check that the transgene name in your samples file matches the filename in ${params.transgene_dir}/"
+            }
+            tuple(sample_name, file(params.reference_genome), transgene_file)
         }
     
     COMBINE_REFERENCE(reference_ch)

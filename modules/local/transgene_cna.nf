@@ -1,6 +1,6 @@
 process TRANSGENE_CNA {
     tag "${sample_name}"
-    publishDir "${params.outdir}/cna_summary", mode: 'copy'
+    publishDir "${params.outdir}/cna_summary/individual", mode: 'copy'
     container 'bumproo/general_genomics:latest'
     
     input:

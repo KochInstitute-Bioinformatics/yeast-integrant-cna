@@ -10,11 +10,14 @@ This pipeline is a streamlined off-shoot of the [yeast-integrant-eval](https://g
 
 ### Workflow Steps
 
-1. **Read Filtering (Chopper)**: Filters ONT reads with max length of 5000bp and minimum quality of 10
+1. **Read Filtering (Chopper)**: Filters ONT reads at multiple length thresholds with minimum quality of 10
 2. **Quality Control (NanoPlot)**: Generates QC metrics and plots for filtered reads
-3. **Reference Preparation**: Combines reference genome with sample-specific transgene into a single FASTA file
+3. **Reference Preparation**: Combines reference genome with transgene into a single FASTA file
 4. **Alignment (minimap2)**: Aligns filtered reads to combined reference using ONT-specific preset
 5. **BAM Processing (samtools)**: Sorts and indexes BAM files for IGV visualization
+6. **Coverage Calculation (samtools coverage)**: Computes per-sequence coverage statistics
+7. **Copy Number Analysis (Python)**: Calculates transgene copy numbers by comparing transgene vs. chromosomal coverage
+8. **CNA Aggregation**: Combines all sample-length results into a single summary CSV file
 
 ## Requirements
 
@@ -73,25 +76,57 @@ nextflow run main.nf -c custom.config
 
 ```
 results/
-├── selected_fastq/          # Filtered FASTQ files
-│   └── {sample}_filtered.fastq
-├── nanoplot/                # QC reports for filtered reads
-│   └── {sample}/
-│       ├── NanoStats.txt
-│       └── *.html, *.png
-├── combined_references/     # Reference + transgene FASTA files
-│   └── {sample}_combined_reference.fasta
-├── alignments/              # Unsorted BAM files
-│   └── {sample}.bam
-├── sorted_bams/             # Final sorted and indexed BAMs for IGV
-│   ├── {sample}_sorted.bam
-│   └── {sample}_sorted.bam.bai
-└── pipeline_info/           # Execution reports
+├── selected_fastq/               # Filtered FASTQ files
+│   ├── {sample}_100_filtered.fastq
+│   ├── {sample}_250_filtered.fastq
+│   ├── {sample}_500_filtered.fastq
+│   └── ...
+├── nanoplot/                     # QC reports for each threshold
+│   ├── {sample}_100/
+│   ├── {sample}_250/
+│   │   ├── NanoStats.txt
+│   │   └── *.html, *.png
+│   └── ...
+├── combined_references/          # Reference + transgene FASTA files
+│   └── {transgene}_combined_reference.fasta
+├── alignments/                   # Unsorted BAM files
+│   ├── {sample}_100.bam
+│   ├── {sample}_250.bam
+│   └── ...
+├── sorted_bams/                  # Sorted and indexed BAMs for IGV
+│   ├── {sample}_100_sorted.bam
+│   ├── {sample}_100_sorted.bam.bai
+│   └── ...
+├── coverage/                     # Coverage statistics per sequence
+│   ├── {sample}_100_coverage.txt
+│   └── ...
+├── cna_summary/                  # ⭐ Copy number analysis results
+│   ├── aggregated_cna_summary.csv   # ⭐ ALL results in one file
+│   └── individual/                   # Individual per-sample results (optional)
+│       ├── {sample}_100_cna_summary.csv
+│       ├── {sample}_250_cna_summary.csv
+│       └── ...
+└── pipeline_info/                # Execution reports
     ├── execution_timeline.html
     ├── execution_report.html
     ├── execution_trace.txt
     └── pipeline_dag.svg
 ```
+
+### Key Output: aggregated_cna_summary.csv
+
+The main result is `cna_summary/aggregated_cna_summary.csv`, which contains one row per sample-length combination:
+
+```csv
+Strain_Length,AvgChrCoverage,TransgeneCoverage,TransgeneCopyNumber
+S-1312_100,25.34,50.68,2.0
+S-1312_250,26.12,52.24,2.0
+S-1312_500,27.89,55.78,2.0
+S-1414_100,30.45,60.90,2.0
+S-1414_250,31.22,62.44,2.0
+```
+
+This allows you to easily compare copy number estimates across different filtering thresholds for all samples.
 
 ## Parameters
 

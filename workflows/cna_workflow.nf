@@ -12,6 +12,7 @@ include { MINIMAP2_ALIGN } from '../modules/local/minimap2'
 include { SAMTOOLS_SORT; SAMTOOLS_INDEX } from '../modules/local/samtools'
 include { SAMTOOLS_COVERAGE } from '../modules/local/coverage'
 include { TRANSGENE_CNA } from '../modules/local/transgene_cna'
+include { AGGREGATE_CNA } from '../modules/local/aggregate_cna'
 
 workflow CNA_WORKFLOW {
     take:
@@ -63,12 +64,20 @@ workflow CNA_WORKFLOW {
     // 7. Calculate coverage statistics per chromosome/transgene
     SAMTOOLS_COVERAGE(SAMTOOLS_INDEX.out.indexed_bam)
     
-    // 8. Calculate transgene copy number analysis
+    // 8. Calculate transgene copy number analysis (individual files)
     TRANSGENE_CNA(SAMTOOLS_COVERAGE.out.coverage)
+    
+    // 9. Aggregate all CNA summaries into a single CSV file
+    def all_cna_files = TRANSGENE_CNA.out.cna_summary
+        .map { _sample_name, csv_file -> csv_file }
+        .collect()
+    
+    AGGREGATE_CNA(all_cna_files)
     
     emit:
     sorted_indexed_bams = SAMTOOLS_INDEX.out.indexed_bam
     coverage_results = SAMTOOLS_COVERAGE.out.coverage
     cna_summary = TRANSGENE_CNA.out.cna_summary
+    aggregated_cna_summary = AGGREGATE_CNA.out.aggregated_summary
     nanoplot_results = NANOPLOT.out.nanoplot_results
 }

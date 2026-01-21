@@ -50,13 +50,27 @@ def calculate_cna(sample_name, coverage_file):
     Calculate copy number analysis metrics.
     
     Args:
-        sample_name: Sample identifier (Strain_Length)
+        sample_name: Sample identifier (Strain_Length format: e.g., S-1077_500)
         coverage_file: Path to samtools coverage output
         
     Returns:
         dict: Dictionary with CNA metrics
     """
     data = parse_coverage_file(coverage_file)
+    
+    # Parse sample_name to extract Strain, Length, and Transgene
+    # Expected format: StrainName_Length (e.g., S-1077_500)
+    parts = sample_name.rsplit('_', 1)
+    if len(parts) == 2:
+        strain = parts[0]
+        length = parts[1]
+    else:
+        # Fallback if format is unexpected
+        strain = sample_name
+        length = ''
+    
+    # Get transgene name from coverage data
+    transgene = data['transgene_name'] if data['transgene_name'] else ''
     
     # Calculate average chromosomal coverage
     if data['chr_coverages']:
@@ -75,6 +89,9 @@ def calculate_cna(sample_name, coverage_file):
     
     return {
         'Strain_Length': sample_name,
+        'Strain': strain,
+        'Length': length,
+        'Transgene': transgene,
         'AvgChrCoverage': round(avg_chr_coverage, 2),
         'TransgeneCoverage': round(transgene_coverage, 2),
         'TransgeneCopyNumber': round(transgene_copy_number, 4)
@@ -99,7 +116,7 @@ def main():
         results = calculate_cna(sample_name, coverage_file)
         
         # Write output to stdout (will be captured by Nextflow)
-        fieldnames = ['Strain_Length', 'AvgChrCoverage', 'TransgeneCoverage', 'TransgeneCopyNumber']
+        fieldnames = ['Strain_Length', 'Strain', 'Length', 'Transgene', 'AvgChrCoverage', 'TransgeneCoverage', 'TransgeneCopyNumber']
         writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow(results)

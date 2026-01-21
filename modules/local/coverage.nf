@@ -10,7 +10,7 @@ process SAMTOOLS_COVERAGE {
     
     script:
     """
-    samtools coverage ${sorted_bam} > ${sample_name}_coverage.txt
+    samtools coverage -Q 10 --ff 2048 --ff 256 ${sorted_bam} > ${sample_name}_coverage.txt
     """
     
     stub:

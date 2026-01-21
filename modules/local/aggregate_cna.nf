@@ -40,9 +40,9 @@ process AGGREGATE_CNA {
     
     stub:
     """
-    echo "Strain_Length,AvgChrCoverage,TransgeneCoverage,TransgeneCopyNumber" > aggregated_cna_summary.csv
-    echo "S-1312_250,25.5,51.0,2.0" >> aggregated_cna_summary.csv
-    echo "S-1312_500,26.2,52.4,2.0" >> aggregated_cna_summary.csv
-    echo "S-1414_250,30.1,60.2,2.0" >> aggregated_cna_summary.csv
+    echo "Strain_Length,Strain,Length,Transgene,AvgChrCoverage,TransgeneCoverage,TransgeneCopyNumber" > aggregated_cna_summary.csv
+    echo "S-1312_250,S-1312,250,A-vector,25.5,51.0,2.0" >> aggregated_cna_summary.csv
+    echo "S-1312_500,S-1312,500,A-vector,26.2,52.4,2.0" >> aggregated_cna_summary.csv
+    echo "S-1414_250,S-1414,250,A-vector,30.1,60.2,2.0" >> aggregated_cna_summary.csv
     """
 }
